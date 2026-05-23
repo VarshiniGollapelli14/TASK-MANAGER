@@ -1,7 +1,13 @@
 from flask import request, jsonify
-from app.services.auth_service import create_user
+from app.services.auth_service import (
+    create_user,
+    fetch_user,
+    modify_user,
+    remove_user
+)
 
-def signup():
+
+def login():
 
     data = request.json
 
@@ -11,4 +17,22 @@ def signup():
 
     response = create_user(name, email, password)
 
+    return jsonify(response)
+#GET user
+def get_user(id):
+    response = fetch_user(id)
+    return jsonify(response)
+#update user
+def update_user(id):
+    data = request.json
+    response = modify_user(
+        id,
+        data.get('name'),
+        data.get('email'),
+        data.get('password')
+    )
+    return jsonify(response)
+#delete user
+def delete_user(id):
+    response = remove_user(id)
     return jsonify(response)
