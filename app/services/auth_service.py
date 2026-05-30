@@ -1,106 +1,98 @@
-users = []
-def create_user(name, email, password):
+from app.config.database import users_collection
+from bson import ObjectId
 
-    # Check duplicate email
-    for user in users:
-        if user['email'] == email:
-            return {
-                "success": False,
-                "message": "Email already exists"
-            }
+# CREATE USER
+def create_user(name, email, password, role):
 
-    new_user = {
-        "id": len(users) + 1,
-        "name": name,
-        "email": email,
-        "password": password
-    }
+    existing_user = users_collection.find_one({
+        "email": email
+    })
 
-    users.append(new_user)
-
-    return {
-        "success": True,
-        "message": "User registered successfully",
-        "data": new_user
-    }
-#get user
-def fetch_user(id):
-    for user in users:
-        if user['id'] == id:
-            return {
-                "success": True,
-                "data": user
-            }
-    return {
-        "success": False,
-        "message": "User not found"
-    }
-#update user
-def modify_user(id, name, email, password):
-    for user in users:
-        if user['id'] == id:
-            user['name'] = name
-            user['email'] = email
-            user['password'] = password
-            return {
-                "success": True,
-                "message": "User updated successfully",
-                "data": user
-            }
-    return {
-        "success": False,
-        "message": "User not found"
-    }
-#delete user
-def remove_user(id):
-    for user in users:
-        if user['id'] == id:
-            users.remove(user)
-            return {
-                "success": True,
-                "message": "User deleted successfully"
-            }
-    return {
-        "success": False,
-        "message": "User not found"
-    }
-def create_user(name, email, password,role):
-
-    # Check duplicate email
-    for user in users:
-        if user['email'] == email:
-            return {
-                "success": False,
-                "message": "Email already exists"
-            }
+    if existing_user:
+        return {
+            "success": False,
+            "message": "Email already exists"
+        }
 
     new_user = {
-        "id": len(users) + 1,
         "name": name,
         "email": email,
         "password": password,
         "role": role
     }
-    users.append(new_user)
+
+    result = users_collection.insert_one(new_user)
+
+    new_user["_id"] = str(result.inserted_id)
 
     return {
         "success": True,
         "message": "User registered successfully",
         "data": new_user
     }
-def modify_user(id, name, email, password,role):
-        for user in users:
-            if user['id'] == id:
-                user['name'] = name
-                user['email'] = email
-                user['password'] = password
-                user['role'] = role
-                return {
-                "success": True,
-                "message": "User updated successfully",
-                "data": user
-                }
+def fetch_user(user_id):
+
+    user = users_collection.find_one({
+        "_id": ObjectId(user_id)
+    })
+
+    if not user:
         return {
-        "success": False,
-        "message": "User not found"
+            "success": False,
+            "message": "User not found"
         }
+
+    user["_id"] = str(user["_id"])
+
+    return {
+        "success": True,
+        "data": user
+    }
+def modify_user(user_id, name, email, password, role):
+
+    result = users_collection.update_one(
+        {"_id": ObjectId(user_id)},
+        {
+            "$set": {
+                "name": name,
+                "email": email,
+                "password": password,
+                "role": role
+            }
+        }
+    )
+
+    if result.matched_count == 0:
+        return {
+            "success": False,
+            "message": "User not found"
+        }
+
+    updated_user = users_collection.find_one(
+        {"_id": ObjectId(user_id)}
+    )
+
+    updated_user["_id"] = str(updated_user["_id"])
+
+    return {
+        "success": True,
+        "message": "User updated successfully",
+        "data": updated_user
+    }
+def remove_user(user_id):
+
+    result = users_collection.delete_one(
+        {"_id": ObjectId(user_id)}
+    )
+
+    if result.deleted_count == 0:
+        return {
+            "success": False,
+            "message": "User not found"
+        }
+
+    return {
+        "success": True,
+        "message": "User deleted successfully"
+    }
+
