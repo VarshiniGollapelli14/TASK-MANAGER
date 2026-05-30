@@ -36,3 +36,34 @@ def update_user(id):
 def delete_user(id):
     response = remove_user(id)
     return jsonify(response)
+#signup endpoint
+def signup():
+    data = request.json
+    name = data.get('name')
+    email = data.get('email')
+    password = data.get('password')
+    role = data.get('role')
+    response = create_user(name, email, password, role)
+    return jsonify(response)
+
+def get_user(id):
+    response = fetch_user(id)
+    return jsonify(response)
+def update_user(id):
+    data = request.json
+    response = modify_user(
+        id,
+        data.get('name'),
+        data.get('email'),
+        data.get('password'),
+        data.get('role')
+    )
+    return jsonify(response)
+
+def delete_user(id):
+    response = remove_user(id)
+    return jsonify(response)
+
+    
+
+    
